@@ -506,9 +506,7 @@ async function generateNarrations(synchronizedContent, options = {}) {
 async function generateMarpPresentation(enhancedContent, options = {}) {
   const {
     outputFile = "presentation.md",
-    theme = "gaia",
-    backgroundColor = "#fff",
-    backgroundImage = "url('https://marp.app/assets/hero-background.svg')",
+    theme = "default",
   } = options;
 
   console.log("Stage 5: Generating Marp-compatible presentation file...");
@@ -516,10 +514,7 @@ async function generateMarpPresentation(enhancedContent, options = {}) {
   // Create header with Marp directives
   let marpMarkdown = `---
 theme: ${theme}
-_class: lead
-paginate: true
-backgroundColor: ${backgroundColor}
-backgroundImage: ${backgroundImage}
+_class: invert
 ---\n\n`;
 
   // Process each slide
