@@ -1,5 +1,5 @@
 // Example script to demonstrate how to use the Presenter AI module
-const { run } = require('./presenter.js');
+const { run } = require("./presenter.js");
 
 // Sample article text
 const articleText = `
@@ -43,17 +43,9 @@ Understanding both the technical and ethical dimensions of AI is crucial for res
 (async () => {
   try {
     console.log("Starting Presenter AI process...");
-    const result = await run(articleText);
-    
-    console.log(`Successfully generated presentation with ${result.length} slides.`);
+    await run(articleText);
     console.log("Check the presentation_data.json file for full results.");
-    
-    // Print a summary of the generated slides
-    console.log("\nPresentation Summary:");
-    result.forEach(slide => {
-      console.log(`Slide ${slide.slide_number}: Audio duration ${slide.narration_duration_seconds || 'N/A'} seconds`);
-    });
   } catch (error) {
     console.error("Error running the presentation generator:", error);
   }
-})(); 
+})();

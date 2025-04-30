@@ -10,6 +10,8 @@ const { existsSync } = require("fs");
 const { TextToSpeechClient } = require("@google-cloud/text-to-speech");
 const ffmpeg = require("fluent-ffmpeg");
 const util = require("util");
+const { exec } = require("child_process");
+const execPromise = util.promisify(exec);
 
 function getDurationFromBuffer(buffer) {
   return new Promise((resolve, reject) => {
@@ -307,6 +309,95 @@ async function generateNarrations(synchronizedContent, options = {}) {
   return enhancedContent;
 }
 
+// Stage 5: Generate Marp-compatible Markdown presentation
+async function generateMarpPresentation(enhancedContent, options = {}) {
+  const {
+    outputFile = "presentation.md",
+    theme = "gaia",
+    backgroundColor = "#fff",
+    backgroundImage = "url('https://marp.app/assets/hero-background.svg')",
+  } = options;
+
+  console.log("Stage 5: Generating Marp-compatible presentation file...");
+
+  // Create header with Marp directives
+  let marpMarkdown = `---
+theme: ${theme}
+_class: lead
+paginate: true
+backgroundColor: ${backgroundColor}
+backgroundImage: ${backgroundImage}
+---\n\n`;
+
+  // Process each slide
+  for (const slide of enhancedContent) {
+    // Extract slide content
+    const slideContent = slide.slide_content.trim();
+
+    // Add to Marp markdown
+    marpMarkdown += slideContent + "\n\n";
+
+    // Add separator between slides (except for the last slide)
+    if (slide.slide_number < enhancedContent.length) {
+      marpMarkdown += "---\n\n";
+    }
+  }
+
+  // Save the Marp markdown to a file
+  const outputPath = path.join(process.cwd(), ".output", outputFile);
+  const outputDir = path.dirname(outputPath);
+
+  // Create output directory if it doesn't exist
+  if (!existsSync(outputDir)) {
+    console.log(`Creating output directory: ${outputDir}`);
+    await fs.mkdir(outputDir, { recursive: true });
+  }
+
+  await fs.writeFile(outputPath, marpMarkdown, "utf-8");
+  console.log(`Marp presentation saved to ${outputPath}`);
+
+  // Also save to debug directory
+  const debugPath = path.join(
+    process.cwd(),
+    ".debug",
+    "stage5_marp_presentation.md"
+  );
+  await fs.writeFile(debugPath, marpMarkdown, "utf-8");
+  console.log("Stage 5 complete. Debug output saved.");
+
+  return {
+    marpMarkdown,
+    outputPath,
+  };
+}
+
+// Stage 6: Generate presentation deck images using Marp
+async function generatePresentationImages(outputPath) {
+  console.log("Stage 6: Generating presentation deck images using Marp...");
+
+  try {
+    // Run marp command to generate PNG images
+    const command = `marp --images png ${outputPath}`;
+    console.log(`Executing command: ${command}`);
+
+    const { stdout, stderr } = await execPromise(command);
+
+    if (stdout) {
+      console.log(`Marp output: ${stdout}`);
+    }
+
+    if (stderr) {
+      console.error(`Marp error: ${stderr}`);
+    }
+
+    console.log("Stage 6 complete. Presentation deck images generated.");
+    return true;
+  } catch (error) {
+    console.error("Error generating presentation images:", error);
+    throw error;
+  }
+}
+
 // Main function to run the entire process
 async function run(articleText) {
   try {
@@ -317,59 +408,82 @@ async function run(articleText) {
       console.log(`Created debug directory: ${debugDir}`);
     }
 
-    console.log("Stage 1: Generating presentation outline with narration...");
-    const markdownWithNarration = await generatePresentation(articleText);
-    // Write stage 1 output to debug file
-    await fs.writeFile(
-      path.join(debugDir, "stage1_outline_with_narration.md"),
-      markdownWithNarration,
-      "utf-8"
-    );
-    console.log("Stage 1 complete. Debug output saved.");
+    // Create .output directory if it doesn't exist
+    const outputDir = path.join(process.cwd(), ".output");
+    if (!existsSync(outputDir)) {
+      await fs.mkdir(outputDir, { recursive: true });
+      console.log(`Created output directory: ${outputDir}`);
+    }
 
-    console.log("Stage 2: Generating presentation slides...");
-    const slidesMarkdown = await generateSlides(markdownWithNarration);
-    // Write stage 2 output to debug file
-    await fs.writeFile(
-      path.join(debugDir, "stage2_slides_markdown.md"),
-      slidesMarkdown,
-      "utf-8"
-    );
-    console.log("Stage 2 complete. Debug output saved.");
+    // console.log("Stage 1: Generating presentation outline with narration...");
+    // const markdownWithNarration = await generatePresentation(articleText);
+    // // Write stage 1 output to debug file
+    // await fs.writeFile(
+    //   path.join(debugDir, "stage1_outline_with_narration.md"),
+    //   markdownWithNarration,
+    //   "utf-8"
+    // );
+    // console.log("Stage 1 complete. Debug output saved.");
 
-    console.log("Stage 3: Synchronizing slides with narration...");
-    const synchronizedContent = await synchronizeSlidesAndNarration(
-      slidesMarkdown,
-      markdownWithNarration
-    );
-    // Write stage 3 output to debug file
-    await fs.writeFile(
-      path.join(debugDir, "stage3_synchronized_content.json"),
-      JSON.stringify(synchronizedContent, null, 2),
-      "utf-8"
-    );
-    console.log("Stage 3 complete. Debug output saved.");
+    // console.log("Stage 2: Generating presentation slides...");
+    // const slidesMarkdown = await generateSlides(markdownWithNarration);
+    // // Write stage 2 output to debug file
+    // await fs.writeFile(
+    //   path.join(debugDir, "stage2_slides_markdown.md"),
+    //   slidesMarkdown,
+    //   "utf-8"
+    // );
+    // console.log("Stage 2 complete. Debug output saved.");
 
-    console.log("Stage 4: Generating narrations...");
-    const enhancedContent = await generateNarrations(synchronizedContent);
-    // Write stage 4 output to debug file
-    await fs.writeFile(
-      path.join(debugDir, "stage4_enhanced_content.json"),
-      JSON.stringify(enhancedContent, null, 2),
-      "utf-8"
-    );
-    console.log("Stage 4 complete. Debug output saved.");
+    // console.log("Stage 3: Synchronizing slides with narration...");
+    // const synchronizedContent = await synchronizeSlidesAndNarration(
+    //   slidesMarkdown,
+    //   markdownWithNarration
+    // );
+    // // Write stage 3 output to debug file
+    // await fs.writeFile(
+    //   path.join(debugDir, "stage3_synchronized_content.json"),
+    //   JSON.stringify(synchronizedContent, null, 2),
+    //   "utf-8"
+    // );
+    // console.log("Stage 3 complete. Debug output saved.");
 
-    // Save the final result as JSON
-    const outputFile = path.join(process.cwd(), "presentation_data.json");
-    await fs.writeFile(
-      outputFile,
-      JSON.stringify(enhancedContent, null, 2),
-      "utf-8"
-    );
-    console.log(`Final presentation data saved to ${outputFile}`);
+    // console.log("Stage 4: Generating narrations...");
+    // const enhancedContent = await generateNarrations(synchronizedContent);
+    // // Write stage 4 output to debug file
+    // await fs.writeFile(
+    //   path.join(debugDir, "stage4_enhanced_content.json"),
+    //   JSON.stringify(enhancedContent, null, 2),
+    //   "utf-8"
+    // );
+    // console.log("Stage 4 complete. Debug output saved.");
 
-    return enhancedContent;
+    // // Save the final content data as JSON
+    // const contentOutputFile = path.join(
+    //   process.cwd(),
+    //   ".output",
+    //   "presentation_data.json"
+    // );
+    // await fs.writeFile(
+    //   contentOutputFile,
+    //   JSON.stringify(enhancedContent, null, 2),
+    //   "utf-8"
+    // );
+    // console.log(`Presentation data saved to ${contentOutputFile}`);
+
+    // // Stage 5: Generate Marp presentation
+    // const marpResult = await generateMarpPresentation(enhancedContent);
+    // console.log(
+    //   `Marp presentation generated successfully at ${marpResult.outputPath}`
+    // );
+
+    // Stage 6: Generate presentation deck images
+    await generatePresentationImages('/home/tajpouria/pro/src/github/tajpouria/presenter-ai/.output/presentation.md');
+
+    return {
+      enhancedContent,
+      marpPresentation: marpResult,
+    };
   } catch (error) {
     console.error("Error in the presentation generation process:", error);
     throw error;
@@ -381,5 +495,7 @@ module.exports = {
   generateSlides,
   synchronizeSlidesAndNarration,
   generateNarrations,
+  generateMarpPresentation,
+  generatePresentationImages,
   run,
 };
