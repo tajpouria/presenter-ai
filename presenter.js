@@ -26,39 +26,87 @@ function getDurationFromBuffer(buffer) {
 // Stage 1: Script + Outline Planner (Markdown output)
 async function generatePresentation(articleText) {
   const stageOnePrompt = `
-ROLE
-You are a veteran presentation writer-narrator.
+You are an expert presentation developer and storytelling specialist. Your task is to transform the provided content into a compelling presentation script with corresponding slide suggestions.
 
-SOURCE ARTICLE
+## Your Task:
+
+1. **Analyze the input content thoroughly**, identifying:
+   - Core message and key takeaways
+   - Main arguments and supporting evidence
+   - Natural narrative flow and logical structure
+   - Key statistics, quotes, or memorable statements
+
+2. **Create a presentation script** that:
+   - Follows a clear narrative arc (introduction, body, conclusion)
+   - Uses engaging, conversational language with direct audience address (use "you" and "we")
+   - Includes presenter directions to point at or reference specific elements on slides
+   - Incorporates live presenter phrases like "As you can see here," "Looking at this chart," "I want to draw your attention to"
+   - Contains natural transitions between sections with audience engagement
+   - Includes rhetorical questions, audience check-ins, and interactive elements
+   - Creates the feeling of a live presentation rather than a recorded narration
+
+3. **Divide the script into logical sections** (8-12 sections depending on content length)
+   - Each section should focus on one key idea or point
+   - Sections should build upon each other in a logical progression
+
+4. **For each section, suggest a slide with**:
+   - A clear, concise title (maximum 8 words)
+   - Bullet points or key information to display (maximum 30-40 words per slide)
+   - Visual element suggestions (chart type, image concept, or diagram if applicable)
+
+## Output Format:
+
+'''
+# PRESENTATION TITLE: [Your suggested title]
+
+## SECTION 1: [Section Name]
+[Section script - full narration text for this section]
+
+### SLIDE 1
+- Title: [Slide title]
+- Content:
+  * [Key point 1]
+  * [Key point 2]
+  * [Visual suggestion if applicable]
+
+## SECTION 2: [Section Name]
+[Section script - full narration text for this section]
+
+### SLIDE 2
+- Title: [Slide title]
+- Content:
+  * [Key point 1]
+  * [Key point 2]
+  * [Visual suggestion if applicable]
+
+[Continue pattern for all sections]
+
+## CONCLUSION
+[Conclusion script - full narration text]
+
+### FINAL SLIDE
+- Title: [Concluding slide title]
+- Content:
+  * [Summary point 1]
+  * [Summary point 2]
+  * [Call to action if applicable]
+'''
+
+Remember:
+- Create content that feels like a live presenter speaking directly to an audience
+- Include explicit cues for where the presenter should point, gesture, or reference visual elements
+- Use natural presenter language like "Now, if we look at the right side of this diagram..." or "I'd like everyone to notice this trend here..."
+- Insert audience engagement moments like "Has anyone here experienced this?" or "Think about the last time you..."
+- Add brief pauses for audience reflection with phrases like "Take a moment to consider..."
+- Prioritize clarity and audience connection over complexity
+- Maintain the original message's integrity while adapting it for an engaging live presentation format
+- Balance text and suggested visuals for maximum impact
+- Create natural transitions between sections
+- Aim for a presentation length of 5-10 minutes when spoken at a normal pace
+
+INPUT
+
 ${articleText}
-
-GOAL
-Transform the article into a complete presentation plan that preserves every key idea while making it easy to follow when spoken aloud.
-
-DELIVERABLE
-Return **only** the following Markdown structure—no extra prose, no code fences:
-
-# Slide 1: <Concise Title>
-**Key Points**
-- bullet 1 (≤ 12 words)
-- …
-**Narration**
-> Full narration for this slide (≈120–160 words)
-
-# Slide 2: <Title>
-**Key Points**
-- …
-**Narration**
-> …
-
-…continue until the content of the article is fully covered.
-
-RULES
-1. The number of slides should be the minimum needed to include *all* significant concepts without rushing (typ. 8–15 for a medium-length article).  
-2. Narration must track the article's logic paragraph-by-paragraph; do **not** omit or invent material.  
-3. Bullet points echo the narration but stay slide-friendly (no sentence-long bullets).  
-4. Keep titles ≤ 8 words, Title Case.  
-5. Do not wrap the output in back-ticks or other fences.  Return the raw Markdown exactly as shown above.
 `;
 
   const { text: markdownWithNarration } = await generateText({
@@ -72,26 +120,104 @@ RULES
 // Stage 2: Slide Markdown Generator (Markdown output)
 async function generateSlides(markdownFromStageOne) {
   const stageTwoPrompt = `
-ROLE
-You are a meticulous slide formatter.
+You are an expert presentation designer specializing in creating visually impactful slides with minimal text. Your task is to transform the script and slide suggestions into polished Markdown slides.
+
+## Your Task:
+
+You will receive:
+1. A presentation script divided into sections
+2. Slide suggestions for each section
+
+Transform these into professional presentation slides in Markdown format that:
+- Communicate key points visually and efficiently
+- Follow best practices for slide design
+- Use appropriate formatting hierarchy
+- Include placeholders for visual elements
+
+## Design Principles to Follow:
+
+1. **Clarity and Simplicity**
+   - One main idea per slide
+   - Minimal text (5-7 bullet points maximum, 1-2 lines each)
+   - Clear visual hierarchy using Markdown formatting
+
+2. **Visual Structure**
+   - Use appropriate headings ('#', '##', '###') for slide titles
+   - Use bullet points ('-' or '*') for list items
+   - Use bold ('**text**') and italic ('*text*') for emphasis
+   - Use blockquotes ('>') for important quotes or callouts
+   - Use horizontal rules ('---') to separate content sections when needed
+
+3. **Visual Element Integration**
+   - Include placeholders for charts, diagrams, or images using descriptive text
+   - For charts/graphs, specify chart type and what it should display
+   - For images, describe the ideal image concept
+   - Add visual reference points that a presenter could point to (e.g., "[POINTER: Left data point]", "[REFERENCE: Bottom right corner]")
+   - Create visual elements that support interactive presenter commentary
+
+4. **Consistent Formatting**
+   - Maintain consistent heading styles
+   - Use parallel structure in bullet points
+   - Balance text distribution across slides
+
+## Output Format:
+
+Your output must be valid Markdown formatted for a slide presentation, with clear slide separators. Include presentation guidance markers that support a live presenter experience. Use the following structure:
+
+'''
+# [Presentation Title]
+
+---
+
+## [Slide 1 Title]
+
+### [Optional Subtitle]
+
+- Key point 1
+- Key point 2
+- Key point 3
+
+[IMAGE: Description of ideal image]
+[POINTER: Description of specific element presenter should point to]
+
+---
+
+## [Slide 2 Title]
+
+> Important quote or callout
+
+- Supporting point 1
+- Supporting point 2
+
+[CHART: Description of chart type and data to display]
+[REFERENCE: Key element for presenter to highlight]
+[AUDIENCE ENGAGEMENT: Suggested question or interactive element]
+
+---
+
+[Continue this pattern for all slides]
+'''
+
+## Important Guidelines:
+
+- Create approximately 10-15 slides total (adjust based on content length)
+- First slide should be a title slide with presentation title and optional subtitle
+- Include a brief agenda/overview slide early in the presentation
+- Include a concluding slide that summarizes key takeaways
+- For tables, use Markdown table syntax
+- For code examples (if needed), use code blocks with appropriate syntax highlighting
+- Use presenter notes syntax for guidance: '<!-- PRESENTER NOTE: Pause here for effect -->'
+- Include visual reference markers like '[POINTER: Top right data point]' or '[HIGHLIGHT: Second bullet point]'
+- Add audience interaction cues like '[AUDIENCE QUESTION: Ask about their experience]'
+- Create visual elements that a presenter could naturally reference and point to
+- Design slides that facilitate a conversational, engaging presentation style
+- Ensure all Markdown is properly formatted and will render correctly
+
+Transform the input content into a presentation that would impress a professional audience while effectively communicating the core message.
 
 INPUT
+
 ${markdownFromStageOne}
-
-TASK
-Generate final reveal.js-style slides, omitting the narration and keeping only visual content.
-
-TRANSFORM RULES
-1. For each "Slide N" block:
-   • Retain the title as an H1 (\`#\`).  
-   • Retain the **Key Points** list exactly as written (bullets only).  
-   • Discard the **Narration** section entirely.  
-2. Separate slides with a line containing only three hyphens:  
-   ---
-3. Do not add or reorder content.
-
-OUTPUT
-Return pure Markdown containing all slides, in order, separated by \`---\`.
 `;
 
   const { text: slidesMarkdown } = await generateText({
@@ -108,39 +234,103 @@ async function synchronizeSlidesAndNarration(slidesMarkdown, originalMarkdown) {
     z.object({
       slide_number: z.number(),
       slide_content: z.string(),
-      narration_text: z.string(),
+      narration_text: z
+        .string()
+        .describe("In plain text, no markdown, no formatting"),
     })
   );
 
   const stageThreePrompt = `
-ROLE
-You align slide content with its narration.
+You are an AI specialist in presentation-to-narration synchronization. Your task is to create a perfectly synchronized JSON mapping between presentation slides and their corresponding narration text.
 
-INPUTS
-SLIDES_MARKDOWN:
-${slidesMarkdown}
+## Your Task:
 
-ORIGINAL_MARKDOWN_WITH_NARRATION:
-${originalMarkdown}
+You will receive:
+1. A set of presentation slides in Markdown format
+2. A narration script that accompanies these slides
 
-OBJECTIVE
-Produce a JSON array where each element links one slide to its narration text.
+Create a JSON structure that maps each slide to its appropriate narration text, ensuring:
+- Each slide has appropriately matched narration
+- The narration flows naturally with the visual content
+- The JSON structure is valid and follows the required schema
 
-STRICT SCHEMA
+## Detailed Instructions:
+
+1. **Analyze Both Inputs Carefully**
+   - Understand the relationship between slides and narration
+   - Identify natural break points in the narration that align with slide transitions
+   - Ensure narration text explains and enhances slide content
+
+2. **For Each Slide:**
+   - Assign the appropriate slide number (sequential, starting from 1)
+   - Include the exact Markdown content of the slide without modification
+   - Write narration text that:
+     * Creates a live presenter experience with direct audience address
+     * Contains explicit references to visual elements (e.g., "As you can see in this chart...")
+     * Includes presenter pointing cues (e.g., "Looking at this point here..." or "Let me draw your attention to...")
+     * Incorporates audience engagement phrases (e.g., "Have you ever noticed that..." or "Think about a time when...")
+     * Uses natural presentation language like "Now if we examine..." or "What's fascinating about this..."
+     * Adds pauses for reflection with phrases like "Take a moment to consider..."
+     * Provides smooth transitions between slides with audience awareness
+     * Is conversational and designed to be spoken aloud in a live setting
+     * Is timed appropriately (roughly 30-60 seconds per slide)
+
+3. **For the JSON Structure:**
+   - Follow the exact schema provided
+   - Ensure all JSON is valid, with proper escaping of special characters
+   - Maintain consistent formatting throughout
+
+## Required JSON Schema:
+
+'''json
 [
   {
     "slide_number": 1,
-    "slide_content": "exact markdown for slide 1, no narration",
-    "narration_text": "exact narration text for slide 1"
+    "slide_content": "# Slide Title\nSlide content in Markdown format...",
+    "narration_text": "The full narration text that accompanies this slide..."
   },
-  …
+  {
+    "slide_number": 2,
+    "slide_content": "## Next Slide\n- Bullet points\n- More content...",
+    "narration_text": "The narration text for the second slide..."
+  },
+  ...
 ]
+'''
 
-CONSTRAINTS
-- \`slide_content\` must match the corresponding block from SLIDES_MARKDOWN **verbatim** (no leading/trailing blanks).  
-- \`narration_text\` must match the narration for the same slide from ORIGINAL_MARKDOWN_WITH_NARRATION **verbatim**.  
-- Number slides consecutively starting at 1; object count must equal the number of slides.  
-- Output **only** the JSON array.
+## Important Guidelines:
+
+1. **Live Presenter Experience**
+   - Create narration that mimics a live presenter speaking directly to an audience
+   - Include phrases that reference specific slide elements like "Looking at the data point I'm highlighting here"
+   - Insert presenter movements with language like "Let me point out this trend" or "Notice this area of the chart"
+   - Add audience connection moments: "I'm curious if anyone here has experienced this" or "You might be wondering..."
+   - Include rhetorical questions directed at the audience
+   - Create natural rhythm with pauses, emphasis moments, and conversational cadence
+   - Use inclusive language like "we" and direct address with "you" to connect with the audience
+   - Consider using phrases that simulate presenter gestures: "As you can see here on the left" or "Let's focus on this section"
+
+2. **Technical Considerations**
+   - Do not modify the original Markdown content
+
+3. **Content Balance**
+   - Title slides should have brief introductory narration
+   - Complex slides may require longer explanations
+   - Concluding slides should summarize key points
+   - Narration should complement, not merely repeat, what's on the slide
+
+4. **Quality Control**
+   - Check that all JSON is properly formatted with no syntax errors
+   - Verify that all slides have appropriate narration text
+   - Ensure the full narration script flows logically when read sequentially
+
+Your output will be the foundation for an automated presentation video, so accuracy in synchronization is critical for a professional result.
+
+INPUT
+
+${slidesMarkdown}
+
+${originalMarkdown}
 `;
 
   const result = await generateObject({
