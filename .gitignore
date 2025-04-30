@@ -1,0 +1,6 @@
+.venv
+.debug
+.output
+.env
+node_modules
+
