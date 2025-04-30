@@ -45,14 +45,14 @@ You are an expert presentation developer and storytelling specialist. Your task 
    - Includes rhetorical questions, audience check-ins, and interactive elements
    - Creates the feeling of a live presentation rather than a recorded narration
 
-3. **Divide the script into logical sections** (8-12 sections depending on content length)
+3. **Divide the script into logical sections** (8-10 sections depending on content length)
    - Each section should focus on one key idea or point
    - Sections should build upon each other in a logical progression
 
 4. **For each section, suggest a slide with**:
-   - A clear, concise title (maximum 8 words)
-   - Bullet points or key information to display (maximum 30-40 words per slide)
-   - Visual element suggestions (chart type, image concept, or diagram if applicable)
+   - A clear, concise title (maximum 5-6 words)
+   - Only 3-5 bullet points with very concise text (maximum 25 words per slide)
+   - No placeholder suggestions for visuals - only include content that will actually appear
 
 ## Output Format:
 
@@ -67,7 +67,6 @@ You are an expert presentation developer and storytelling specialist. Your task 
 - Content:
   * [Key point 1]
   * [Key point 2]
-  * [Visual suggestion if applicable]
 
 ## SECTION 2: [Section Name]
 [Section script - full narration text for this section]
@@ -77,7 +76,6 @@ You are an expert presentation developer and storytelling specialist. Your task 
 - Content:
   * [Key point 1]
   * [Key point 2]
-  * [Visual suggestion if applicable]
 
 [Continue pattern for all sections]
 
@@ -89,20 +87,19 @@ You are an expert presentation developer and storytelling specialist. Your task 
 - Content:
   * [Summary point 1]
   * [Summary point 2]
-  * [Call to action if applicable]
 '''
 
 Remember:
 - Create content that feels like a live presenter speaking directly to an audience
-- Include explicit cues for where the presenter should point, gesture, or reference visual elements
-- Use natural presenter language like "Now, if we look at the right side of this diagram..." or "I'd like everyone to notice this trend here..."
+- Include explicit cues for where the presenter should reference visual elements
+- Use natural presenter language like "Now, if we look at..." or "I'd like everyone to notice this trend..."
 - Insert audience engagement moments like "Has anyone here experienced this?" or "Think about the last time you..."
 - Add brief pauses for audience reflection with phrases like "Take a moment to consider..."
 - Prioritize clarity and audience connection over complexity
 - Maintain the original message's integrity while adapting it for an engaging live presentation format
-- Balance text and suggested visuals for maximum impact
+- Keep slide content extremely minimal - never more than 5 short bullet points
 - Create natural transitions between sections
-- Aim for a presentation length of 5-10 minutes when spoken at a normal pace
+- Aim for a presentation length of 5-8 minutes when spoken at a normal pace
 
 INPUT
 
@@ -129,40 +126,34 @@ You will receive:
 2. Slide suggestions for each section
 
 Transform these into professional presentation slides in Markdown format that:
-- Communicate key points visually and efficiently
-- Follow best practices for slide design
+- Communicate key points efficiently with minimal text
+- Follow best practices for slide design (clean, simple, focused)
 - Use appropriate formatting hierarchy
-- Include placeholders for visual elements
+- Do NOT include any placeholders or references to missing elements
 
 ## Design Principles to Follow:
 
 1. **Clarity and Simplicity**
    - One main idea per slide
-   - Minimal text (5-7 bullet points maximum, 1-2 lines each)
+   - Minimal text (maximum 3-5 bullet points, each 1 line only)
    - Clear visual hierarchy using Markdown formatting
 
 2. **Visual Structure**
-   - Use appropriate headings ('#', '##', '###') for slide titles
-   - Use bullet points ('-' or '*') for list items
+   - Use appropriate headings ('#', '##') for slide titles
+   - Use bullet points ('-') for list items
    - Use bold ('**text**') and italic ('*text*') for emphasis
-   - Use blockquotes ('>') for important quotes or callouts
-   - Use horizontal rules ('---') to separate content sections when needed
+   - Use blockquotes ('>') only for important quotes
+   - Use horizontal rules ('---') to separate slides
 
-3. **Visual Element Integration**
-   - Include placeholders for charts, diagrams, or images using descriptive text
-   - For charts/graphs, specify chart type and what it should display
-   - For images, describe the ideal image concept
-   - Add visual reference points that a presenter could point to (e.g., "[POINTER: Left data point]", "[REFERENCE: Bottom right corner]")
-   - Create visual elements that support interactive presenter commentary
-
-4. **Consistent Formatting**
+3. **Consistency**
    - Maintain consistent heading styles
    - Use parallel structure in bullet points
-   - Balance text distribution across slides
+   - Keep font sizes consistent (through heading levels)
+   - Ensure balanced white space
 
 ## Output Format:
 
-Your output must be valid Markdown formatted for a slide presentation, with clear slide separators. Include presentation guidance markers that support a live presenter experience. Use the following structure:
+Your output must be valid Markdown formatted for a slide presentation, with clear slide separators. Use the following structure:
 
 '''
 # [Presentation Title]
@@ -171,14 +162,9 @@ Your output must be valid Markdown formatted for a slide presentation, with clea
 
 ## [Slide 1 Title]
 
-### [Optional Subtitle]
-
 - Key point 1
 - Key point 2
 - Key point 3
-
-[IMAGE: Description of ideal image]
-[POINTER: Description of specific element presenter should point to]
 
 ---
 
@@ -189,10 +175,6 @@ Your output must be valid Markdown formatted for a slide presentation, with clea
 - Supporting point 1
 - Supporting point 2
 
-[CHART: Description of chart type and data to display]
-[REFERENCE: Key element for presenter to highlight]
-[AUDIENCE ENGAGEMENT: Suggested question or interactive element]
-
 ---
 
 [Continue this pattern for all slides]
@@ -200,20 +182,19 @@ Your output must be valid Markdown formatted for a slide presentation, with clea
 
 ## Important Guidelines:
 
-- Create approximately 10-15 slides total (adjust based on content length)
-- First slide should be a title slide with presentation title and optional subtitle
+- Create approximately 8-12 slides total (adjust based on content length)
+- First slide should be a title slide with presentation title only
 - Include a brief agenda/overview slide early in the presentation
-- Include a concluding slide that summarizes key takeaways
-- For tables, use Markdown table syntax
-- For code examples (if needed), use code blocks with appropriate syntax highlighting
-- Use presenter notes syntax for guidance: '<!-- PRESENTER NOTE: Pause here for effect -->'
-- Include visual reference markers like '[POINTER: Top right data point]' or '[HIGHLIGHT: Second bullet point]'
-- Add audience interaction cues like '[AUDIENCE QUESTION: Ask about their experience]'
-- Create visual elements that a presenter could naturally reference and point to
-- Design slides that facilitate a conversational, engaging presentation style
+- Include a concluding slide that summarizes key takeaways in 3 points maximum
+- Do NOT include any placeholders for images, charts, or diagrams
+- Do NOT include any presenter notes or guidance markers
+- Do NOT include any text indicating something should be added later
+- Keep bullet points extremely concise - ideally 5-7 words each
+- Never have more than 5 bullet points on a single slide
+- Ensure all text will fit on a slide without overflowing (limit total words per slide to 30)
 - Ensure all Markdown is properly formatted and will render correctly
 
-Transform the input content into a presentation that would impress a professional audience while effectively communicating the core message.
+Transform the input content into a clean, minimal presentation that would impress a professional audience while effectively communicating the core message.
 
 INPUT
 
@@ -259,20 +240,18 @@ Create a JSON structure that maps each slide to its appropriate narration text, 
 1. **Analyze Both Inputs Carefully**
    - Understand the relationship between slides and narration
    - Identify natural break points in the narration that align with slide transitions
-   - Ensure narration text explains and enhances slide content
+   - Ensure narration text explains the slide content without directly reading bullet points
 
 2. **For Each Slide:**
    - Assign the appropriate slide number (sequential, starting from 1)
    - Include the exact Markdown content of the slide without modification
    - Write narration text that:
      * Creates a live presenter experience with direct audience address
-     * Contains explicit references to visual elements (e.g., "As you can see in this chart...")
-     * Includes presenter pointing cues (e.g., "Looking at this point here..." or "Let me draw your attention to...")
-     * Incorporates audience engagement phrases (e.g., "Have you ever noticed that..." or "Think about a time when...")
-     * Uses natural presentation language like "Now if we examine..." or "What's fascinating about this..."
-     * Adds pauses for reflection with phrases like "Take a moment to consider..."
-     * Provides smooth transitions between slides with audience awareness
-     * Is conversational and designed to be spoken aloud in a live setting
+     * Incorporates audience engagement phrases
+     * Uses natural presentation language
+     * Adds pauses for reflection
+     * Provides smooth transitions between slides
+     * Is conversational and designed to be spoken aloud
      * Is timed appropriately (roughly 30-60 seconds per slide)
 
 3. **For the JSON Structure:**
@@ -293,8 +272,7 @@ Create a JSON structure that maps each slide to its appropriate narration text, 
     "slide_number": 2,
     "slide_content": "## Next Slide\n- Bullet points\n- More content...",
     "narration_text": "The narration text for the second slide..."
-  },
-  ...
+  }
 ]
 '''
 
@@ -302,22 +280,20 @@ Create a JSON structure that maps each slide to its appropriate narration text, 
 
 1. **Live Presenter Experience**
    - Create narration that mimics a live presenter speaking directly to an audience
-   - Include phrases that reference specific slide elements like "Looking at the data point I'm highlighting here"
-   - Insert presenter movements with language like "Let me point out this trend" or "Notice this area of the chart"
+   - Include phrases like "Looking at this slide, you can see..." or "Let me tell you about..."
    - Add audience connection moments: "I'm curious if anyone here has experienced this" or "You might be wondering..."
    - Include rhetorical questions directed at the audience
    - Create natural rhythm with pauses, emphasis moments, and conversational cadence
    - Use inclusive language like "we" and direct address with "you" to connect with the audience
-   - Consider using phrases that simulate presenter gestures: "As you can see here on the left" or "Let's focus on this section"
 
 2. **Technical Considerations**
    - Do not modify the original Markdown content
+   - Remove any placeholder references from the narration
 
 3. **Content Balance**
    - Title slides should have brief introductory narration
    - Complex slides may require longer explanations
    - Concluding slides should summarize key points
-   - Narration should complement, not merely repeat, what's on the slide
 
 4. **Quality Control**
    - Check that all JSON is properly formatted with no syntax errors
@@ -504,10 +480,7 @@ async function generateNarrations(synchronizedContent, options = {}) {
 
 // Stage 5: Generate Marp-compatible Markdown presentation
 async function generateMarpPresentation(enhancedContent, options = {}) {
-  const {
-    outputFile = "presentation.md",
-    theme = "default",
-  } = options;
+  const { outputFile = "presentation.md", theme = "default" } = options;
 
   console.log("Stage 5: Generating Marp-compatible presentation file...");
 
@@ -515,6 +488,8 @@ async function generateMarpPresentation(enhancedContent, options = {}) {
   let marpMarkdown = `---
 theme: ${theme}
 _class: invert
+marp: true
+paginate: true
 ---\n\n`;
 
   // Process each slide
@@ -785,9 +760,7 @@ async function run(articleText) {
     );
 
     // Stage 6: Generate presentation deck images
-    await generatePresentationImages(
-      "/home/tajpouria/pro/src/github/tajpouria/presenter-ai/.output/presentation.md"
-    );
+    await generatePresentationImages(marpResult.outputPath);
 
     // Stage 7: Generate individual slide videos
     console.log("Stage 7: Creating individual slide videos...");
