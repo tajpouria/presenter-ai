@@ -9,9 +9,7 @@ const path = require("path");
 const { existsSync } = require("fs");
 const { TextToSpeechClient } = require("@google-cloud/text-to-speech");
 const ffmpeg = require("fluent-ffmpeg");
-const util = require("util");
-const { exec } = require("child_process");
-const execPromise = util.promisify(exec);
+const { execSync } = require("child_process");
 
 function getDurationFromBuffer(buffer) {
   return new Promise((resolve, reject) => {
@@ -183,7 +181,7 @@ async function generateNarrations(synchronizedContent, options = {}) {
 
   const {
     batchSize = 1,
-    outputDir = ".output/narrations",
+    outputDir = ".output",
     voiceLanguage = "en-US",
     voiceName = "en-US-Chirp3-HD-Puck",
   } = options;
@@ -226,14 +224,18 @@ async function generateNarrations(synchronizedContent, options = {}) {
     const batchResults = await Promise.all(
       batch.map(async (slide) => {
         try {
-          const slideNumber = slide.slide_number;
+          const slideNumber = slide.slide_number.toString().padStart(3, "0");
           const narrationText = slide.narration_text;
           console.log(
             `[Slide ${slideNumber}] Processing narration (${narrationText.length} chars)`
           );
 
-          const fileName = `slide_${slideNumber}_narration.mp3`;
-          const filePath = path.join(outputPath, fileName);
+          const mp3FileName = `presentation.${slideNumber}.mp3`;
+          const filePath = path.join(outputPath, mp3FileName);
+          const slidePngPath = path.join(
+            outputPath,
+            `presentation.${slideNumber}.png`
+          );
 
           // Construct the TTS request
           const request = {
@@ -270,6 +272,7 @@ async function generateNarrations(synchronizedContent, options = {}) {
           return {
             ...slide,
             narration_mp3_path: filePath,
+            slide_png_path: slidePngPath,
             narration_duration_seconds: parseFloat(
               durationInSeconds.toFixed(2)
             ),
@@ -380,20 +383,14 @@ async function generatePresentationImages(outputPath) {
     const command = `marp --images png ${outputPath}`;
     console.log(`Executing command: ${command}`);
 
-    const { stdout, stderr } = await execPromise(command);
-
-    if (stdout) {
-      console.log(`Marp output: ${stdout}`);
-    }
-
-    if (stderr) {
-      console.error(`Marp error: ${stderr}`);
-    }
+    const output = execSync(command, { encoding: "utf8" });
+    console.log(`Marp output: ${output}`);
 
     console.log("Stage 6 complete. Presentation deck images generated.");
     return true;
   } catch (error) {
     console.error("Error generating presentation images:", error);
+    console.error(`Marp error: ${error.stderr}`);
     throw error;
   }
 }
@@ -415,70 +412,72 @@ async function run(articleText) {
       console.log(`Created output directory: ${outputDir}`);
     }
 
-    // console.log("Stage 1: Generating presentation outline with narration...");
-    // const markdownWithNarration = await generatePresentation(articleText);
-    // // Write stage 1 output to debug file
-    // await fs.writeFile(
-    //   path.join(debugDir, "stage1_outline_with_narration.md"),
-    //   markdownWithNarration,
-    //   "utf-8"
-    // );
-    // console.log("Stage 1 complete. Debug output saved.");
+    console.log("Stage 1: Generating presentation outline with narration...");
+    const markdownWithNarration = await generatePresentation(articleText);
+    // Write stage 1 output to debug file
+    await fs.writeFile(
+      path.join(debugDir, "stage1_outline_with_narration.md"),
+      markdownWithNarration,
+      "utf-8"
+    );
+    console.log("Stage 1 complete. Debug output saved.");
 
-    // console.log("Stage 2: Generating presentation slides...");
-    // const slidesMarkdown = await generateSlides(markdownWithNarration);
-    // // Write stage 2 output to debug file
-    // await fs.writeFile(
-    //   path.join(debugDir, "stage2_slides_markdown.md"),
-    //   slidesMarkdown,
-    //   "utf-8"
-    // );
-    // console.log("Stage 2 complete. Debug output saved.");
+    console.log("Stage 2: Generating presentation slides...");
+    const slidesMarkdown = await generateSlides(markdownWithNarration);
+    // Write stage 2 output to debug file
+    await fs.writeFile(
+      path.join(debugDir, "stage2_slides_markdown.md"),
+      slidesMarkdown,
+      "utf-8"
+    );
+    console.log("Stage 2 complete. Debug output saved.");
 
-    // console.log("Stage 3: Synchronizing slides with narration...");
-    // const synchronizedContent = await synchronizeSlidesAndNarration(
-    //   slidesMarkdown,
-    //   markdownWithNarration
-    // );
-    // // Write stage 3 output to debug file
-    // await fs.writeFile(
-    //   path.join(debugDir, "stage3_synchronized_content.json"),
-    //   JSON.stringify(synchronizedContent, null, 2),
-    //   "utf-8"
-    // );
-    // console.log("Stage 3 complete. Debug output saved.");
+    console.log("Stage 3: Synchronizing slides with narration...");
+    const synchronizedContent = await synchronizeSlidesAndNarration(
+      slidesMarkdown,
+      markdownWithNarration
+    );
+    // Write stage 3 output to debug file
+    await fs.writeFile(
+      path.join(debugDir, "stage3_synchronized_content.json"),
+      JSON.stringify(synchronizedContent, null, 2),
+      "utf-8"
+    );
+    console.log("Stage 3 complete. Debug output saved.");
 
-    // console.log("Stage 4: Generating narrations...");
-    // const enhancedContent = await generateNarrations(synchronizedContent);
-    // // Write stage 4 output to debug file
-    // await fs.writeFile(
-    //   path.join(debugDir, "stage4_enhanced_content.json"),
-    //   JSON.stringify(enhancedContent, null, 2),
-    //   "utf-8"
-    // );
-    // console.log("Stage 4 complete. Debug output saved.");
+    console.log("Stage 4: Generating narrations...");
+    const enhancedContent = await generateNarrations(synchronizedContent);
+    // Write stage 4 output to debug file
+    await fs.writeFile(
+      path.join(debugDir, "stage4_enhanced_content.json"),
+      JSON.stringify(enhancedContent, null, 2),
+      "utf-8"
+    );
+    console.log("Stage 4 complete. Debug output saved.");
 
-    // // Save the final content data as JSON
-    // const contentOutputFile = path.join(
-    //   process.cwd(),
-    //   ".output",
-    //   "presentation_data.json"
-    // );
-    // await fs.writeFile(
-    //   contentOutputFile,
-    //   JSON.stringify(enhancedContent, null, 2),
-    //   "utf-8"
-    // );
-    // console.log(`Presentation data saved to ${contentOutputFile}`);
+    // Save the final content data as JSON
+    const contentOutputFile = path.join(
+      process.cwd(),
+      ".output",
+      "presentation_data.json"
+    );
+    await fs.writeFile(
+      contentOutputFile,
+      JSON.stringify(enhancedContent, null, 2),
+      "utf-8"
+    );
+    console.log(`Presentation data saved to ${contentOutputFile}`);
 
-    // // Stage 5: Generate Marp presentation
-    // const marpResult = await generateMarpPresentation(enhancedContent);
-    // console.log(
-    //   `Marp presentation generated successfully at ${marpResult.outputPath}`
-    // );
+    // Stage 5: Generate Marp presentation
+    const marpResult = await generateMarpPresentation(enhancedContent);
+    console.log(
+      `Marp presentation generated successfully at ${marpResult.outputPath}`
+    );
 
     // Stage 6: Generate presentation deck images
-    await generatePresentationImages('/home/tajpouria/pro/src/github/tajpouria/presenter-ai/.output/presentation.md');
+    await generatePresentationImages(
+      "/home/tajpouria/pro/src/github/tajpouria/presenter-ai/.output/presentation.md"
+    );
 
     return {
       enhancedContent,
