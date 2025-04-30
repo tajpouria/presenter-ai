@@ -395,6 +395,131 @@ async function generatePresentationImages(outputPath) {
   }
 }
 
+// Stage 7: Generate individual slide videos
+async function generateSlideVideos(enhancedContent, options = {}) {
+  console.log("Stage 7: Generating individual slide videos...");
+
+  const { outputDir = ".output", tempDir = ".temp" } = options;
+
+  // Create temp directory if it doesn't exist
+  const tempPath = path.join(process.cwd(), tempDir);
+  if (!existsSync(tempPath)) {
+    console.log(`Creating temp directory: ${tempPath}`);
+    await fs.mkdir(tempPath, { recursive: true });
+  }
+
+  const slideVideos = [];
+
+  for (const slide of enhancedContent) {
+    try {
+      const slideNumber = slide.slide_number.toString().padStart(3, "0");
+      console.log(`[Slide ${slideNumber}] Creating video...`);
+
+      // Skip if missing audio or image
+      if (!slide.narration_mp3_path || !existsSync(slide.narration_mp3_path)) {
+        console.warn(`[Slide ${slideNumber}] Missing audio file, skipping`);
+        continue;
+      }
+
+      // The PNG path should be in the output directory with naming pattern presentation.001.png
+      const slidePngPath = path.join(
+        process.cwd(),
+        outputDir,
+        `presentation.${slideNumber}.png`
+      );
+      if (!existsSync(slidePngPath)) {
+        console.warn(
+          `[Slide ${slideNumber}] Image file not found at ${slidePngPath}, skipping`
+        );
+        continue;
+      }
+
+      const outputVideoPath = path.join(tempPath, `slide_${slideNumber}.mp4`);
+
+      // Create a video from the slide image with the duration of the audio
+      await new Promise((resolve, reject) => {
+        ffmpeg()
+          .input(slidePngPath)
+          .inputOptions(["-loop 1"])
+          .input(slide.narration_mp3_path)
+          .outputOptions([
+            "-c:v libx264",
+            "-tune stillimage",
+            "-c:a aac",
+            "-b:a 192k",
+            "-pix_fmt yuv420p",
+            "-shortest",
+          ])
+          .output(outputVideoPath)
+          .on("end", () => {
+            console.log(
+              `[Slide ${slideNumber}] Video created: ${outputVideoPath}`
+            );
+            slideVideos.push({
+              slideNumber: slide.slide_number,
+              videoPath: outputVideoPath,
+            });
+            resolve();
+          })
+          .on("error", (err) => {
+            console.error(
+              `[Slide ${slideNumber}] Error creating video: ${err.message}`
+            );
+            reject(err);
+          })
+          .run();
+      });
+    } catch (error) {
+      console.error(
+        `Error generating video for slide ${slide.slide_number}:`,
+        error
+      );
+    }
+  }
+
+  console.log(`Created ${slideVideos.length} individual slide videos`);
+  return slideVideos;
+}
+
+// Stage 8: Combine slide videos into final presentation
+async function combineSlideVideos(slideVideos, options = {}) {
+  console.log("Stage 8: Combining slide videos into final presentation...");
+
+  const { outputDir = ".output", outputFileName = "presentation.mp4" } =
+    options;
+
+  const outputPath = path.join(process.cwd(), outputDir, outputFileName);
+
+  // Sort videos by slide number
+  slideVideos.sort((a, b) => a.slideNumber - b.slideNumber);
+
+  // Create a text file with the list of videos to concatenate
+  const concatListPath = path.join(process.cwd(), ".temp", "concat_list.txt");
+  const concatListContent = slideVideos
+    .map((slide) => `file '${slide.videoPath}'`)
+    .join("\n");
+
+  await fs.writeFile(concatListPath, concatListContent, "utf-8");
+
+  // Combine videos using ffmpeg concat demuxer
+  return new Promise((resolve, reject) => {
+    ffmpeg()
+      .input(concatListPath)
+      .inputOptions(["-f concat", "-safe 0"])
+      .outputOptions(["-c copy"])
+      .output(outputPath)
+      .on("end", () => {
+        console.log(`Final presentation video created: ${outputPath}`);
+        resolve(outputPath);
+      })
+      .on("error", (err) => {
+        console.error(`Error combining videos: ${err.message}`);
+        reject(err);
+      })
+      .run();
+  });
+}
+
 // Main function to run the entire process
 async function run(articleText) {
   try {
@@ -479,9 +604,20 @@ async function run(articleText) {
       "/home/tajpouria/pro/src/github/tajpouria/presenter-ai/.output/presentation.md"
     );
 
+    // Stage 7: Generate individual slide videos
+    console.log("Stage 7: Creating individual slide videos...");
+    const slideVideos = await generateSlideVideos(enhancedContent);
+    console.log("Stage 7 complete. Individual slide videos created.");
+
+    // Stage 8: Combine slide videos into final presentation
+    console.log("Stage 8: Creating final presentation video...");
+    const finalVideoPath = await combineSlideVideos(slideVideos);
+    console.log(`Stage 8 complete. Final video created at: ${finalVideoPath}`);
+
     return {
       enhancedContent,
       marpPresentation: marpResult,
+      finalVideoPath,
     };
   } catch (error) {
     console.error("Error in the presentation generation process:", error);
@@ -496,5 +632,7 @@ module.exports = {
   generateNarrations,
   generateMarpPresentation,
   generatePresentationImages,
+  generateSlideVideos,
+  combineSlideVideos,
   run,
 };
